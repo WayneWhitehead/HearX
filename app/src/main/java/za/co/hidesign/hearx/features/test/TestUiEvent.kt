@@ -4,6 +4,6 @@ sealed class TestUiEvent {
     data class InputChanged(val input: String) : TestUiEvent()
     object StartRound : TestUiEvent()
     object SubmitDigits : TestUiEvent()
-    object SubmitTestScore : TestUiEvent()
-    object DismissDialog : TestUiEvent()
+    object NavigateHome : TestUiEvent()
+    object DisplayDialog : TestUiEvent()
 }

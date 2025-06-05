@@ -4,8 +4,11 @@
     <string name="exit_test">Exit Test</string>
     <string name="submit">Submit</string>
     <string name="enter_what_you_heard">Enter the 3 digits you heard:</string>
-    <string name="get_ready">Get ready for the next round...</string>
+    <string name="prepare_to_listen">Prepare to listen...</string>
+    <string name="playing_now">Playing now...</string>
     <string name="ok">OK</string>
     <string name="test_complete">Test Complete</string>
     <string name="your_score">Your score: %1$s</string>
+    <string name="round">Round: %1$s/%2$s</string>
+    <string name="results">Results</string>
 </resources>

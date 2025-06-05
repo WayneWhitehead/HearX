@@ -5,6 +5,7 @@ import android.media.MediaPlayer
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import za.co.hidesign.hearx.R
 import javax.inject.Inject
@@ -43,20 +44,27 @@ class PlayAudioUseCase @Inject constructor(@ApplicationContext private val conte
 
     suspend operator fun invoke(triplet: List<Int>, difficulty: Int, onComplete: () -> Unit) =
         withContext(Dispatchers.IO) {
+            ensureActive()
             val noiseRes = noiseResMap[difficulty] ?: return@withContext
             val noisePlayer = MediaPlayer.create(context, noiseRes)
-            noisePlayer.start()
-            delay(NOISE_START_DELAY_MS)
-            for (digit in triplet) {
-                val digitRes = digitResMap[digit] ?: continue
-                val digitPlayer = MediaPlayer.create(context, digitRes)
-                digitPlayer.start()
-                delay(DIGIT_PLAY_DELAY_MS)
-                digitPlayer.release()
+            try {
+                noisePlayer.start()
+                delay(NOISE_START_DELAY_MS)
+                ensureActive()
+                for (digit in triplet) {
+                    ensureActive()
+                    val digitRes = digitResMap[digit] ?: continue
+                    val digitPlayer = MediaPlayer.create(context, digitRes)
+                    digitPlayer.start()
+                    delay(DIGIT_PLAY_DELAY_MS)
+                    digitPlayer.release()
+                }
+                delay(NOISE_END_DELAY_MS)
+                ensureActive()
+            } finally {
+                if (noisePlayer.isPlaying) noisePlayer.stop()
+                noisePlayer.release()
+                onComplete()
             }
-            delay(NOISE_END_DELAY_MS)
-            noisePlayer.stop()
-            noisePlayer.release()
-            onComplete()
         }
 }

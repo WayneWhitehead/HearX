@@ -1,3 +1,4 @@
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -6,8 +7,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -40,41 +41,58 @@ import za.co.hidesign.hearx.R
 import za.co.hidesign.hearx.features.test.TestUiEvent
 import za.co.hidesign.hearx.features.test.TestUiState
 import za.co.hidesign.hearx.features.test.TestViewModel
-import kotlin.collections.get
-import kotlin.compareTo
-import kotlin.text.set
-import kotlin.toString
 
 @Composable
 fun TestScreen(navController: NavController, viewModel: TestViewModel = hiltViewModel()) {
     val state by remember { viewModel.uiState }.collectAsState()
+    val navigationEvent by viewModel.navigationEvent.collectAsState()
 
     LaunchedEffect(state.round) {
         viewModel.onEvent(TestUiEvent.StartRound)
     }
 
-    if (state.showDialog) {
-        LaunchedEffect(state.score) {
-            viewModel.onEvent(TestUiEvent.SubmitTestScore)
+    LaunchedEffect(navigationEvent) {
+        when (navigationEvent) {
+            TestUiEvent.NavigateHome -> navController.popBackStack("home", false)
+            TestUiEvent.DisplayDialog -> {
+                navController.navigate("result_dialog/${state.score}")
+            }
+            else -> {}
         }
-        TestResultDialog(
-            score = state.score,
-            onDismiss = { viewModel.onEvent(TestUiEvent.DismissDialog) },
-            onOkClick = { navController.popBackStack("home", false) }
-        )
     }
 
     Scaffold { padding ->
         Box(Modifier.fillMaxSize().padding(32.dp).padding(padding)) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Round: ${state.round}/${state.totalRounds}")
-            }
+            Text(
+                modifier = Modifier.align(Alignment.TopCenter),
+                text = stringResource(R.string.round, state.round, state.totalRounds),
+                style = typography.headlineSmall
+            )
 
-            if (state.isWaiting) {
-                Box(Modifier.align(Alignment.Center)) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(stringResource(R.string.get_ready))
-                        CircularProgressIndicator()
+            Box(Modifier.align(Alignment.Center)) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    Text(
+                        text = when {
+                            state.isPlaying -> stringResource(R.string.playing_now)
+                            state.isWaiting -> stringResource(R.string.prepare_to_listen)
+                            else -> stringResource(R.string.enter_what_you_heard)
+                        },
+                        style = typography.headlineSmall
+                    )
+                    AnimatedVisibility(state.isWaiting) {
+                        Box(contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(modifier = Modifier.size(64.dp))
+                            if (state.countdown > 0) {
+                                Text(
+                                    text = state.countdown.toString(),
+                                    style = typography.headlineMedium,
+                                    modifier = Modifier.align(Alignment.Center)
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -83,7 +101,7 @@ fun TestScreen(navController: NavController, viewModel: TestViewModel = hiltView
                 modifier = Modifier.align(Alignment.BottomCenter),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                if (!state.isWaiting && state.round < state.totalRounds) {
+                if (!state.isWaiting && state.round <= state.totalRounds) {
                     DigitInputs(
                         state = state,
                         onInputChanged = { viewModel.onEvent(TestUiEvent.InputChanged(it)) }
@@ -102,7 +120,7 @@ fun TestScreen(navController: NavController, viewModel: TestViewModel = hiltView
                     )
                 }
                 OutlinedButton(
-                    onClick = { navController.popBackStack() },
+                    onClick = { viewModel.onEvent(TestUiEvent.NavigateHome) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
                     border = BorderStroke(2.dp, colorScheme.primary)
@@ -130,7 +148,6 @@ fun DigitInputs(
         digits = state.input.padEnd(3, ' ')
     }
 
-    Text(stringResource(R.string.enter_what_you_heard))
     Row(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         modifier = Modifier.fillMaxWidth()
@@ -153,16 +170,14 @@ fun DigitInputs(
                     }
                     if (i == 2 && digits[i] != ' ') focusManager.clearFocus()
                 },
-                modifier = Modifier.weight(1f).focusRequester(focusRequesters[i]),
+                modifier = Modifier
+                    .weight(1f)
+                    .focusRequester(focusRequesters[i]),
                 singleLine = true,
                 textStyle = typography.displayMedium,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number,
                     imeAction = if (i == 2) ImeAction.Done else ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = {},//{ if (i < 2 && digits[i] != ' ') focusManager.moveFocus(FocusDirection.Next) },
-                    onDone = {}//{ if (i == 2 && digits[i] != ' ') focusManager.clearFocus() }
                 ),
                 maxLines = 1
             )

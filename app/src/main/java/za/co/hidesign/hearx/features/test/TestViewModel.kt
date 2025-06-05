@@ -4,12 +4,13 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import za.co.hidesign.hearx.features.test.data.model.TestUploadRequest
 import za.co.hidesign.hearx.features.test.domain.usecase.GenerateTripletListUseCase
 import za.co.hidesign.hearx.features.test.domain.usecase.PlayAudioUseCase
@@ -27,7 +28,12 @@ class TestViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(TestUiState())
     val uiState: StateFlow<TestUiState> = _uiState
 
+    private val _navigationEvent = MutableStateFlow<TestUiEvent?>(null)
+    val navigationEvent: StateFlow<TestUiEvent?> = _navigationEvent
+
     private val triplets = generateTripletListUseCase(10)
+
+    private var playJob: Job? = null
 
     fun onEvent(event: TestUiEvent) {
         viewModelScope.launch {
@@ -35,24 +41,43 @@ class TestViewModel @Inject constructor(
                 is TestUiEvent.InputChanged -> onInputChange(event.input)
                 TestUiEvent.StartRound -> startRound()
                 TestUiEvent.SubmitDigits -> submitDigits()
-                TestUiEvent.SubmitTestScore -> submitTestScore()
-                TestUiEvent.DismissDialog -> dismissDialog()
+                TestUiEvent.NavigateHome -> {
+                    cancelAudio()
+                    _navigationEvent.emit(TestUiEvent.NavigateHome)
+                }
+                TestUiEvent.DisplayDialog -> {
+                    _navigationEvent.emit(TestUiEvent.DisplayDialog)
+                }
             }
         }
     }
 
     private suspend fun startRound() {
         val state = _uiState.value
-        if (state.round < state.totalRounds) {
+        if (state.round <= state.totalRounds) {
             _uiState.value = state.copy(isWaiting = true)
-            delay(if (state.round == 1) FIRST_ROUND_DELAY_MS else OTHER_ROUND_DELAY_MS)
-            val currentTriplet = triplets[state.round]
-            playAudioUseCase(currentTriplet, state.difficulty) {
-                _uiState.value = _uiState.value.copy(isWaiting = false)
+            val delayMs = if (state.round == 1) FIRST_ROUND_DELAY_MS else OTHER_ROUND_DELAY_MS
+            val seconds = (delayMs / 1000).toInt()
+            for (i in seconds downTo 1) {
+                _uiState.value = _uiState.value.copy(countdown = i)
+                delay(1000)
             }
-        } else if (state.round == state.totalRounds) {
-            _uiState.value = state.copy(showDialog = true)
+            _uiState.value = _uiState.value.copy(countdown = 0, isWaiting = false, isPlaying = true)
+            val currentTriplet = triplets[state.round]
+            playJob = viewModelScope.launch {
+                playAudioUseCase(currentTriplet, state.difficulty) {
+                    _uiState.value = _uiState.value.copy(isPlaying = false)
+                }
+            }
+        } else if (state.round > state.totalRounds) {
+            submitTestScore()
+            onEvent(TestUiEvent.DisplayDialog)
         }
+    }
+
+    private fun cancelAudio() {
+        playJob?.cancel()
+        playJob = null
     }
 
     private fun onInputChange(newInput: String) {
@@ -91,14 +116,12 @@ class TestViewModel @Inject constructor(
             rounds = rounds
         )
         try {
-            uploadTestResultUseCase(request)
+            withContext(Dispatchers.IO) {
+                uploadTestResultUseCase(request)
+            }
         } catch (e: Exception) {
 
         }
-    }
-
-    private fun dismissDialog() {
-        _uiState.value = _uiState.value.copy(showDialog = false)
     }
 
     companion object {
