@@ -7,7 +7,7 @@ data class TestUiState(
     val difficulty: Int = 5,
     val isPlaying: Boolean = false,
     val isWaiting: Boolean = true,
-    val totalRounds: Int = 1,
+    val totalRounds: Int = 10,
     val countdown: Int = 0,
     val results: List<Pair<List<Int>, String>> = emptyList()
 )
