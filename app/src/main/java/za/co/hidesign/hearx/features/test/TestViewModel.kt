@@ -63,7 +63,7 @@ class TestViewModel @Inject constructor(
                 delay(1000)
             }
             _uiState.value = _uiState.value.copy(countdown = 0, isWaiting = false, isPlaying = true)
-            val currentTriplet = triplets[state.round]
+            val currentTriplet = triplets[state.round-1]
             playJob = viewModelScope.launch {
                 playAudioUseCase(currentTriplet, state.difficulty) {
                     _uiState.value = _uiState.value.copy(isPlaying = false)
