@@ -1,9 +1,13 @@
 package za.co.hidesign.hearx.features.home
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.OutlinedButton
@@ -32,6 +36,17 @@ fun HomeScreen(navController: NavController) {
                 ) {
                     Text(
                         text = stringResource(R.string.start_test),
+                        style = typography.displaySmall
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedButton(
+                    onClick = { navController.navigate("results") },
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(4.dp, colorScheme.primary)
+                ) {
+                    Text(
+                        text = stringResource(R.string.results),
                         style = typography.displaySmall
                     )
                 }
