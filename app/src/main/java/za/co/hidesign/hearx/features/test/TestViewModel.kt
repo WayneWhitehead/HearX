@@ -50,7 +50,7 @@ class TestViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(showErrorDialog = true, errorTitle = event.title, errorDescription = event.description)
                 }
                 TestNavEvent.HideErrorDialog -> {
-                    _uiState.value = _uiState.value.copy(showErrorDialog = false)
+                    _uiState.value = _uiState.value.copy(showErrorDialog = false, errorTitle = null, errorDescription = null)
                 }
             }
         }
@@ -128,16 +128,16 @@ class TestViewModel @Inject constructor(
                             _navigationEvent.emit(TestNavEvent.DisplayResultsDialog)
                         }
                         .onFailure { error ->
-                            _navigationEvent.emit(TestNavEvent.ShowErrorDialog(
-                                title = error.message,
-                                description = error.cause?.message
+                            onNavEvent(TestNavEvent.ShowErrorDialog(
+                                title = "Database Error",
+                                description = "${error.message} \n\n ${error.cause?.message}"
                             ))
                         }
                 }
                 .onFailure { error ->
-                    _navigationEvent.emit(TestNavEvent.ShowErrorDialog(
-                        title = error.message,
-                        description = error.cause?.message
+                    onNavEvent(TestNavEvent.ShowErrorDialog(
+                        title = "Network Error",
+                        description = "${error.message} \n\n ${error.cause?.message}"
                     ))
                 }
         }
@@ -146,7 +146,7 @@ class TestViewModel @Inject constructor(
     private fun createTestUploadRequest(state: TestUiState): TestUploadRequest {
         return TestUploadRequest(
             score = state.score,
-            rounds = state.results.map { (triplet, answer) ->
+            rounds = state.results.map { (triplet, answer) ->1
                 TestUploadRequest.Round(
                     difficulty = state.difficulty,
                     triplet_played = triplet.joinToString(""),
@@ -157,7 +157,7 @@ class TestViewModel @Inject constructor(
     }
 
     companion object {
-        const val TOTAL_ROUNDS = 10
+        const val TOTAL_ROUNDS = 2
         const val FIRST_ROUND_DELAY_MS = 3000L
         const val OTHER_ROUND_DELAY_MS = 2000L
     }

@@ -70,7 +70,10 @@ fun TestScreen(
                 DisplayErrorDialog(
                     title = state?.errorTitle ?: stringResource(R.string.error_title),
                     description = state?.errorDescription ?: stringResource(R.string.error_message),
-                    onTryAgain = { viewModel }
+                    onTryAgain = {
+                        viewModel.onNavEvent(TestNavEvent.HideErrorDialog)
+                        viewModel.onEvent(TestEvent.SubmitTestResult)
+                    }
                 )
             }
 
