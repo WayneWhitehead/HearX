@@ -44,6 +44,8 @@ android {
 dependencies {
     implementation(libs.core.ktx)
     implementation(libs.lifecycle.runtime.ktx)
+
+    //region Compose
     implementation(libs.compose.activity)
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
@@ -51,27 +53,32 @@ dependencies {
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
     implementation(libs.compose.navigation)
+    //endregion
 
-    // Hilt
+    //region Hilt
     implementation(libs.hilt.android)
     kapt(libs.hilt.android.compiler)
     implementation(libs.hilt.navigation.compose)
+    //endregion
 
-    // Room
+    //region Room
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     kapt(libs.room.compiler)
+    //endregion
 
-    // Retrofit & Gson
+    //region Retrofit & Gson
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
     implementation(libs.gson)
+    //endregion
 
-    // OkHttp
+    //region OkHttp
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
+    //endregion
 
-
+    //region Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.espresso.core)
@@ -79,4 +86,5 @@ dependencies {
     androidTestImplementation(libs.compose.ui.test.junit4)
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
+    //endregion
 }
