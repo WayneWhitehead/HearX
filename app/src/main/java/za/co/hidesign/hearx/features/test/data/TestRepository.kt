@@ -1,5 +1,6 @@
 package za.co.hidesign.hearx.features.test.data
 
+import retrofit2.Response
 import za.co.hidesign.hearx.features.results.data.local.TestResultDao
 import za.co.hidesign.hearx.features.results.data.model.TestResultEntity
 import za.co.hidesign.hearx.features.test.data.model.TestUploadRequest
@@ -10,8 +11,8 @@ class TestRepository @Inject constructor(
     private val api: TestApi,
     private val testResultDao: TestResultDao
 ) {
-    suspend fun uploadTest(request: TestUploadRequest) {
-        api.uploadTest(request)
+    suspend fun uploadTest(request: TestUploadRequest): Response<Unit> {
+        return api.uploadTest(request)
     }
 
     suspend fun saveTestResult(score: Int) {
