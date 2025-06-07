@@ -1,10 +1,11 @@
 package za.co.hidesign.hearx.features.test.domain.usecase
 
+import za.co.hidesign.hearx.features.test.TestViewModel.Companion.TOTAL_ROUNDS
 import javax.inject.Inject
 import kotlin.random.Random
 
 class GenerateTripletListUseCase @Inject constructor() {
-    operator fun invoke(count: Int = 10): List<List<Int>> {
+    operator fun invoke(count: Int = TOTAL_ROUNDS): List<List<Int>> {
         val triplets = mutableListOf<List<Int>>()
         val generated = mutableSetOf<List<Int>>()
         var prev: List<Int> = emptyList()
