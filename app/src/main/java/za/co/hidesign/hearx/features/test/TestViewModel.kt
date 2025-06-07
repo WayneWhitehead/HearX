@@ -157,7 +157,7 @@ class TestViewModel @Inject constructor(
     }
 
     companion object {
-        const val TOTAL_ROUNDS = 2
+        const val TOTAL_ROUNDS = 10
         const val FIRST_ROUND_DELAY_MS = 3000L
         const val OTHER_ROUND_DELAY_MS = 2000L
     }
