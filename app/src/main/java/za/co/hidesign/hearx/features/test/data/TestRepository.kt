@@ -11,13 +11,9 @@ class TestRepository @Inject constructor(
     private val api: TestApi,
     private val testResultDao: TestResultDao
 ) {
-    suspend fun uploadTest(request: TestUploadRequest): Response<Unit> {
-        return api.uploadTest(request)
-    }
+    suspend fun uploadTest(request: TestUploadRequest) = api.uploadTest(request)
 
-    suspend fun saveTestResult(score: Int) {
-        testResultDao.insert(TestResultEntity(score = score))
-    }
+    suspend fun saveTestResult(score: Int) = testResultDao.insert(TestResultEntity(score = score))
 
     fun getAllResults() = testResultDao.getAllResults()
 }
