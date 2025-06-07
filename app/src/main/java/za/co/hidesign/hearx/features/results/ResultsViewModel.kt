@@ -4,14 +4,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
-import za.co.hidesign.hearx.features.test.data.TestRepository
+import za.co.hidesign.hearx.features.results.data.model.TestResultEntity
+import za.co.hidesign.hearx.features.results.domain.usecase.GetTestResultsUseCase
 import javax.inject.Inject
 
 @HiltViewModel
 class ResultsViewModel @Inject constructor(
-    repository: TestRepository
+    getTestResultsUseCase: GetTestResultsUseCase
 ) : ViewModel() {
-    val results = repository.getAllResults()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val results: StateFlow<List<TestResultEntity>> =
+        getTestResultsUseCase().stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            emptyList()
+        )
 }
