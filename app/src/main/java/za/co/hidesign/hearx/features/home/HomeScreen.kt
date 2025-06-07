@@ -19,6 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import za.co.hidesign.hearx.MainActivity.Companion.RESULTS
+import za.co.hidesign.hearx.MainActivity.Companion.TEST
 import za.co.hidesign.hearx.R
 
 @Composable
@@ -30,7 +32,7 @@ fun HomeScreen(navController: NavController) {
                 verticalArrangement = Arrangement.Center
             ) {
                 OutlinedButton(
-                    onClick = { navController.navigate("test") },
+                    onClick = { navController.navigate(TEST) },
                     modifier = Modifier.fillMaxWidth(),
                     border = BorderStroke(4.dp, colorScheme.primary)
                 ) {
@@ -41,7 +43,7 @@ fun HomeScreen(navController: NavController) {
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedButton(
-                    onClick = { navController.navigate("results") },
+                    onClick = { navController.navigate(RESULTS) },
                     modifier = Modifier.fillMaxWidth(),
                     border = BorderStroke(4.dp, colorScheme.primary)
                 ) {

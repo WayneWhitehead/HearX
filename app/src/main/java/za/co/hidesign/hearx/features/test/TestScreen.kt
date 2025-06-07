@@ -1,3 +1,5 @@
+package za.co.hidesign.hearx.features.test
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -37,35 +39,44 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import za.co.hidesign.hearx.MainActivity.Companion.HOME
+import za.co.hidesign.hearx.MainActivity.Companion.RESULT_DIALOG
 import za.co.hidesign.hearx.R
-import za.co.hidesign.hearx.features.test.TestUiEvent
-import za.co.hidesign.hearx.features.test.TestUiState
-import za.co.hidesign.hearx.features.test.TestViewModel
+import za.co.hidesign.hearx.features.test.TestViewModel.Companion.TOTAL_ROUNDS
 
 @Composable
-fun TestScreen(navController: NavController, viewModel: TestViewModel = hiltViewModel()) {
-    val state by remember { viewModel.uiState }.collectAsState()
+fun TestScreen(
+    navController: NavController,
+    viewModel: TestViewModel = hiltViewModel()
+) {
+    val state by viewModel.uiState.collectAsState()
     val navigationEvent by viewModel.navigationEvent.collectAsState()
 
     LaunchedEffect(state.round) {
-        viewModel.onEvent(TestUiEvent.StartRound)
+        viewModel.onEvent(TestEvent.StartRound)
     }
 
     LaunchedEffect(navigationEvent) {
         when (navigationEvent) {
-            TestUiEvent.NavigateHome -> navController.popBackStack("home", false)
-            TestUiEvent.DisplayDialog -> {
-                navController.navigate("result_dialog/${state.score}")
-            }
+            is TestNavEvent.NavigateHome -> navController.popBackStack(HOME, false)
+            is TestNavEvent.DisplayResultsDialog -> navController.navigate("$RESULT_DIALOG/${state.score}")
             else -> {}
         }
     }
 
     Scaffold { padding ->
         Box(Modifier.fillMaxSize().padding(32.dp).padding(padding)) {
+            if (state.showErrorDialog) {
+                DisplayErrorDialog(
+                    title = state?.errorTitle ?: stringResource(R.string.error_title),
+                    description = state?.errorDescription ?: stringResource(R.string.error_message),
+                    onTryAgain = { viewModel }
+                )
+            }
+
             Text(
                 modifier = Modifier.align(Alignment.TopCenter),
-                text = stringResource(R.string.round, state.round, state.totalRounds),
+                text = stringResource(R.string.round, (state.round + 1).coerceAtMost(TOTAL_ROUNDS), TOTAL_ROUNDS),
                 style = typography.headlineSmall
             )
 
@@ -78,6 +89,7 @@ fun TestScreen(navController: NavController, viewModel: TestViewModel = hiltView
                         text = when {
                             state.isPlaying -> stringResource(R.string.playing_now)
                             state.isWaiting -> stringResource(R.string.prepare_to_listen)
+                            state.round >= TOTAL_ROUNDS -> stringResource(R.string.submitting_test)
                             else -> stringResource(R.string.enter_what_you_heard)
                         },
                         style = typography.headlineSmall
@@ -101,15 +113,15 @@ fun TestScreen(navController: NavController, viewModel: TestViewModel = hiltView
                 modifier = Modifier.align(Alignment.BottomCenter),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                if (!state.isWaiting && state.round <= state.totalRounds) {
+                if (!state.isWaiting && state.round < TOTAL_ROUNDS) {
                     DigitInputs(
                         state = state,
-                        onInputChanged = { viewModel.onEvent(TestUiEvent.InputChanged(it)) }
+                        onInputChanged = { viewModel.onEvent(TestEvent.InputChanged(it)) }
                     )
                 }
 
                 Button(
-                    onClick = { viewModel.onEvent(TestUiEvent.SubmitDigits) },
+                    onClick = { viewModel.onEvent(TestEvent.SubmitDigits) },
                     enabled = state.input.length == 3 && !state.isPlaying,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp)
@@ -120,7 +132,7 @@ fun TestScreen(navController: NavController, viewModel: TestViewModel = hiltView
                     )
                 }
                 OutlinedButton(
-                    onClick = { viewModel.onEvent(TestUiEvent.NavigateHome) },
+                    onClick = { viewModel.onNavEvent(TestNavEvent.NavigateHome) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
                     border = BorderStroke(2.dp, colorScheme.primary)
@@ -170,9 +182,7 @@ fun DigitInputs(
                     }
                     if (i == 2 && digits[i] != ' ') focusManager.clearFocus()
                 },
-                modifier = Modifier
-                    .weight(1f)
-                    .focusRequester(focusRequesters[i]),
+                modifier = Modifier.weight(1f).focusRequester(focusRequesters[i]),
                 singleLine = true,
                 textStyle = typography.displayMedium,
                 keyboardOptions = KeyboardOptions(
