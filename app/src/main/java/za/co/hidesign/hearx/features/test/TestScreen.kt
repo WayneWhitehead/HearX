@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,6 +34,7 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -97,6 +99,10 @@ fun TestScreen(
                         },
                         style = typography.headlineSmall
                     )
+
+                    AnimatedVisibility(state.round >= TOTAL_ROUNDS) {
+                        CircularProgressIndicator(modifier = Modifier.size(64.dp))
+                    }
                     AnimatedVisibility(state.isWaiting) {
                         Box(contentAlignment = Alignment.Center) {
                             CircularProgressIndicator(modifier = Modifier.size(64.dp))
@@ -118,7 +124,7 @@ fun TestScreen(
             ) {
                 if (!state.isWaiting && state.round < TOTAL_ROUNDS) {
                     DigitInputs(
-                        state = state,
+                        input = state.input,
                         onInputChanged = { viewModel.onEvent(TestEvent.InputChanged(it)) }
                     )
                 }
@@ -130,7 +136,7 @@ fun TestScreen(
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = stringResource(R.string.submit),
+                        text = stringResource(R.string.submit_digits),
                         style = typography.labelMedium
                     )
                 }
@@ -152,15 +158,21 @@ fun TestScreen(
 
 @Composable
 fun DigitInputs(
-    state: TestUiState,
-    onInputChanged: (String) -> Unit,
+    input: String,
+    onInputChanged: (String) -> Unit
 ) {
     val focusRequesters = List(3) { remember { FocusRequester() } }
     val focusManager = LocalFocusManager.current
-    var digits by remember { mutableStateOf(state.input.padEnd(3, ' ')) }
+    val keyboardController = LocalSoftwareKeyboardController.current
+    var digits by remember { mutableStateOf(input.padEnd(3, ' ')) }
 
-    LaunchedEffect(state.input) {
-        digits = state.input.padEnd(3, ' ')
+    LaunchedEffect(Unit) {
+        focusRequesters[0].requestFocus()
+        keyboardController?.show()
+    }
+
+    LaunchedEffect(input) {
+        digits = input.padEnd(3, ' ')
     }
 
     Row(
@@ -190,7 +202,7 @@ fun DigitInputs(
                 textStyle = typography.displayMedium,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number,
-                    imeAction = if (i == 2) ImeAction.Done else ImeAction.Next
+                    imeAction = if (i == 2) ImeAction.Done else ImeAction.None
                 ),
                 maxLines = 1
             )

@@ -2,7 +2,7 @@
     <string name="app_name">HearX</string>
     <string name="start_test">Start Test</string>
     <string name="exit_test">Exit Test</string>
-    <string name="submit">Submit</string>
+    <string name="submit_digits">Submit Digits</string>
     <string name="enter_what_you_heard">Enter the 3 digits you heard:</string>
     <string name="submitting_test">Submitting test...</string>
     <string name="prepare_to_listen">Prepare to listen...</string>
